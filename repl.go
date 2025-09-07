@@ -29,7 +29,7 @@ func startRepl(cfg *config) {
 		
 		userCommand := words[0]
 
-		validCommand, ok := commands[userCommand]
+		validCommand, ok := getCommands()[userCommand]
 		if !ok {
 			fmt.Println("Unknown command")
 			continue

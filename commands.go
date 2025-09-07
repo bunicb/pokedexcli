@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"error"
+	"errors"
+	"os"
 )
 
 type cliCommand struct {
 	name        string
 	description string
-	callback    func() error
-	config      *config
+	callback    func(*config) error
 }
 
 type Area struct {
@@ -22,32 +22,28 @@ type Area struct {
 	} `json:"results"`
 }
 
-var commands map[string]cliCommand = make(map[string]cliCommand)
-
-func init() {
-	commands["help"] = cliCommand{
-		name:        "help",
-		description: "Displays a help message",
-		callback:    commandHelp,
-		config:	  	 &config{},
-	}
-	commands["exit"] = cliCommand{
-		name:        "exit",
-		description: "Exit the Pokedex",
-		callback:    commandExit,
-		config:	  	 &config{},
-	}
-	commands["map"] = cliCommand{
-		name:        "map",
-		description: "Display 20 locations areas",
-		callback:    commandMap,
-		config:	  	 &config{},
-	}
-	commands["mapb"] = cliCommand{
-		name:        "mapb",
-		description: "Display previous 20 locations areas",
-		callback:    commandMapb,
-		config:	  	 &config{},
+func getCommands() map[string]cliCommand {
+	return map[string]cliCommand{
+		"help": {
+			name:        "help",
+			description: "Displays a help message",
+			callback:    commandHelp,
+		},
+		"map": {
+			name:        "map",
+			description: "Get the next page of locations",
+			callback:    commandMap,
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Get the previous page of locations",
+			callback:    commandMapb,
+		},
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    commandExit,
+		},
 	}
 }
 
@@ -59,7 +55,7 @@ func commandExit(cfg *config) error {
 
 func commandHelp(cfg *config) error {
 	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n")
-	for _, cmd := range commands {
+	for _, cmd := range getCommands() {
 		fmt.Printf("%s: %s\n", cmd.name, cmd.description)
 	}
 	return nil
