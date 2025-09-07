@@ -2,10 +2,7 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"net/http"
-	"io"
-	"encoding/json"
+	"error"
 )
 
 type cliCommand struct {
@@ -13,11 +10,6 @@ type cliCommand struct {
 	description string
 	callback    func() error
 	config      *config
-}
-
-type config struct {
-	Next     string `json:"next"`
-	Previous string `json:"previous"`
 }
 
 type Area struct {
@@ -59,13 +51,13 @@ func init() {
 	}
 }
 
-func commandExit() error {
+func commandExit(cfg *config) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp() error {
+func commandHelp(cfg *config) error {
 	fmt.Printf("Welcome to the Pokedex!\nUsage:\n\n")
 	for _, cmd := range commands {
 		fmt.Printf("%s: %s\n", cmd.name, cmd.description)
@@ -73,71 +65,36 @@ func commandHelp() error {
 	return nil
 }
 
-func commandMap() error {
-	url := "https://pokeapi.co/api/v2/location-area?limit=20"
-	if commands["map"].config.Next != "" {
-		url = commands["map"].config.Next
-	}
-
-	res, err := http.Get(url)
+func commandMap(cfg *config) error {
+	locations, err := cfg.pokeapiClient.ListLocations(cfg.nextLocationsURL)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return fmt.Errorf("failed to fetch data: status code %d", res.StatusCode)
-	}
-	var locations Area
 
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = json.Unmarshal(body, &locations)
-	if err != nil {
-		fmt.Println(err)
-	}
+	cfg.nextLocationsURL = locations.Next
+	cfg.prevLocationsURL = locations.Previous
 
-	commands["map"].config.Next = locations.Next
-	commands["map"].config.Previous = locations.Previous
-
-	for r := range locations.Results {
-		fmt.Println(locations.Results[r].Name)
+	for _, loc := range locations.Results {
+		fmt.Println(loc.Name)
 	}
 	return nil
 }
 
-func commandMapb() error {
-	if commands["map"].config.Previous == "" {
-		fmt.Println("you're on the first page")
-		return nil
+func commandMapb(cfg *config) error {
+	if cfg.prevLocationsURL == nil {
+		return errors.New("you're on the first page")
 	}
-	url := commands["map"].config.Previous
-	
-	res, err := http.Get(url)
+
+	location, err := cfg.pokeapiClient.ListLocations(cfg.prevLocationsURL)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return fmt.Errorf("failed to fetch data: status code %d", res.StatusCode)
-	}
-	var locations Area
 
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = json.Unmarshal(body, &locations)
-	if err != nil {
-		fmt.Println(err)
-	}
+	cfg.nextLocationsURL = location.Next
+	cfg.prevLocationsURL = location.Previous
 
-	commands["map"].config.Next = locations.Next
-	commands["map"].config.Previous = locations.Previous
-
-	for r := range locations.Results {
-		fmt.Println(locations.Results[r].Name)
+	for _, loc := range location.Results {
+		fmt.Println(loc.Name)
 	}
 	return nil
 }

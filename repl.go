@@ -5,9 +5,18 @@ import (
 	"fmt"
 	"bufio"
 	"os"
+
+	"github.com/bunicb/pokedexcli/pokeapi"
 )
 
-func startRepl() {
+type config struct {
+	pokeapiClient    pokeapi.Client
+	nextLocationsURL *string
+	prevLocationsURL *string
+}
+
+
+func startRepl(cfg *config) {
 	input := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("Pokedex> ")
@@ -25,7 +34,7 @@ func startRepl() {
 			fmt.Println("Unknown command")
 			continue
 		}
-		err := validCommand.callback()
+		err := validCommand.callback(cfg)
 		if err != nil {
 			fmt.Println("Error executing command:", err)
 		}
