@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"errors"
 	"os"
+	"math/rand"
 )
 
 type cliCommand struct {
@@ -30,9 +31,14 @@ func getCommands() map[string]cliCommand {
 			callback:    commandMapb,
 		},
 		"explore": {
-			name:        "explore",
+			name:        "explore <location_name>",
 			description: "Get possible pokemon encounters in a location",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch <pokemon_name>",
+			description: "Catch a pokemon and add to pokedex",
+			callback:    commandCatch,
 		},
 		"exit": {
 			name:        "exit",
@@ -106,5 +112,25 @@ func commandExplore(cfg *config, args ...string) error {
 	for _, enc := range location.PokemonEncounters {
 		fmt.Printf(" - %s\n", enc.Pokemon.Name)
 	}
+	return nil
+}
+
+func commandCatch(cfg *config, args ...string) error {
+	if len(args) != 1 {
+		return errors.New("please provide a pokemon name")
+	}
+	name := args[0]
+	pokemon, err := cfg.pokeapiClient.GetPokemon(name)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemon.Name)
+	randomNumber := rand.Intn(1000)
+	if randomNumber < pokemon.BaseExperience {
+		fmt.Printf("%s escaped!\n", pokemon.Name)
+		return nil
+	}
+	fmt.Printf("%s was caught!\n", pokemon.Name)
+	cfg.caughtPokemon[pokemon.Name] = pokemon
 	return nil
 }
