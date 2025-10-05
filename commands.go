@@ -12,16 +12,6 @@ type cliCommand struct {
 	callback    func(*config) error
 }
 
-type Area struct {
-	Count    int    `json:"count"`
-	Next     string `json:"next"`
-	Previous string `json:"previous"`
-	Results  []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"results"`
-}
-
 func getCommands() map[string]cliCommand {
 	return map[string]cliCommand{
 		"help": {
@@ -78,6 +68,7 @@ func commandMap(cfg *config) error {
 
 func commandMapb(cfg *config) error {
 	if cfg.prevLocationsURL == nil {
+		cfg.nextLocationsURL = nil
 		return errors.New("you're on the first page")
 	}
 

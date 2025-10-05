@@ -6,7 +6,7 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/bunicb/pokedexcli/pokeapi"
+	"github.com/bunicb/pokedexcli/internal/pokeapi"
 )
 
 type config struct {
