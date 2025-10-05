@@ -28,13 +28,17 @@ func startRepl(cfg *config) {
 		}
 		
 		userCommand := words[0]
+		args := []string{}
+		if len(words) > 1 {
+			args = words[1:]
+		}
 
 		validCommand, ok := getCommands()[userCommand]
 		if !ok {
 			fmt.Println("Unknown command")
 			continue
 		}
-		err := validCommand.callback(cfg)
+		err := validCommand.callback(cfg, args...)
 		if err != nil {
 			fmt.Println("Error executing command:", err)
 		}
